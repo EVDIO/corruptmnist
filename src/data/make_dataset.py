@@ -8,6 +8,33 @@ import numpy as np
 import torch
 import os
 from torchvision import transforms
+from torch.utils.data import Dataset
+
+
+class CorruptMnist(Dataset):
+    def __init__(self, train, input_filepath = None, output_filepath = None):
+
+        if train:
+            content = []
+            for i in range(5):
+                content.append(np.load(os.path.join(input_filepath, 'train_{}.npz'.format(i)), allow_pickle=True))
+            data = torch.tensor(np.concatenate([c['images'] for c in content])).reshape(-1, 1, 28, 28)
+            targets = torch.tensor(np.concatenate([c['labels'] for c in content]))
+        else:
+            content = np.load(os.path.join(input_filepath, 'test.npz'), allow_pickle=True)
+            data = torch.tensor(content['images']).reshape(-1, 1, 28, 28)
+            targets = torch.tensor(content['labels'])
+            
+        self.data = data
+        self.targets = targets
+    
+    def __len__(self):
+        return self.targets.numel()
+    
+    def __getitem__(self, idx):
+
+        return self.data[idx].float(), self.targets[idx]
+        
 
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
@@ -19,44 +46,13 @@ def main(input_filepath, output_filepath):
 
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
+    train_data = CorruptMnist(True,input_filepath=input_filepath,output_filepath=output_filepath)
+    test_data = CorruptMnist(False,input_filepath=input_filepath,output_filepath=output_filepath)
+    print(type(train_data))
+    torch.save(train_data, output_filepath + "/train_set.pt")
+    torch.save(test_data, output_filepath + "/test_set.pt")
 
-    # initialize lists to hold the training and test data
-    train_data = []
-    train_labels = []
-    test_data = []
-    test_labels = []
-    
-    # load the training data
-    for i in range(8):
-        npz_file = np.load(os.path.join(input_filepath, 'train_{}.npz'.format(i)))
-        data = npz_file['images']
-        labels = npz_file['labels']
-        train_data.append(data)
-        train_labels.append(labels)
-    
-    # load the test data
-    npz_file = np.load(os.path.join(input_filepath, 'test.npz'))
-    test_data = npz_file['images']
-    test_labels = npz_file['labels']
 
-    # concatenate the training data and labels into single arrays
-    train_data = np.concatenate(train_data)
-    train_labels = np.concatenate(train_labels)
-    
-    # apply normalization transform to the data
-    normalize_transform = transforms.Normalize((0.5,), (0.5,))
-    train_data = normalize_transform(torch.from_numpy(train_data))
-    test_data = normalize_transform(torch.from_numpy(test_data))
-    
-    # convert labels to PyTorch tensors
-    train_labels = torch.from_numpy(train_labels)
-    test_labels = torch.from_numpy(test_labels)
-
-    # save the normalized data and labels to the save directory
-    torch.save((train_data, train_labels), os.path.join(output_filepath, 'train_set.pt'))
-    torch.save((test_data, test_labels), os.path.join(output_filepath, 'test_set.pt'))
-
-    
 
 if __name__ == '__main__':
     log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -70,3 +66,5 @@ if __name__ == '__main__':
     load_dotenv(find_dotenv())
 
     main()
+
+

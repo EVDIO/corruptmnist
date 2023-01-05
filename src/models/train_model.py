@@ -1,6 +1,6 @@
 import torch
 from model import SimpleCNN
-#from data.make_dataset import CorruptMnist
+from src.data.make_dataset import CorruptMnist
 import click
 import logging
 from pathlib import Path
@@ -11,29 +11,7 @@ import torch
 import os
 from torchvision import transforms
 from torch.utils.data import Dataset
-class CorruptMnist(Dataset):
-    def __init__(self, train, input_filepath = None, output_filepath = None):
 
-        if train:
-            content = []
-            for i in range(5):
-                content.append(np.load(os.path.join(input_filepath, 'train_{}.npz'.format(i)), allow_pickle=True))
-            data = torch.tensor(np.concatenate([c['images'] for c in content])).reshape(-1, 1, 28, 28)
-            targets = torch.tensor(np.concatenate([c['labels'] for c in content]))
-        else:
-            content = np.load(os.path.join(input_filepath, 'test.npz'), allow_pickle=True)
-            data = torch.tensor(content['images']).reshape(-1, 1, 28, 28)
-            targets = torch.tensor(content['labels'])
-            
-        self.data = data
-        self.targets = targets
-    
-    def __len__(self):
-        return self.targets.numel()
-    
-    def __getitem__(self, idx):
-
-        return self.data[idx].float(), self.targets[idx]
 
 def train():
 

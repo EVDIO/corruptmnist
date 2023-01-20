@@ -16,7 +16,7 @@ class CorruptMnist(Dataset):
 
         if train:
             content = []
-            for i in range(5):
+            for i in range(8):
                 content.append(np.load(os.path.join(input_filepath, 'train_{}.npz'.format(i)), allow_pickle=True))
             data = torch.tensor(np.concatenate([c['images'] for c in content])).reshape(-1, 1, 28, 28)
             targets = torch.tensor(np.concatenate([c['labels'] for c in content]))

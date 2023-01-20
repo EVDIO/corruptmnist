@@ -41,10 +41,9 @@ def train():
             optimizer.step()
             loss_tracker.append(loss.item())
         print(f"Epoch {epoch+1}/{n_epoch}. Loss: {loss}")        
-    torch.save(model.state_dict(), 'trained_model.pt')
+    torch.save(model.state_dict(), 'models/trained_model.pt')
  
     return model
 
 if __name__ == "__main__":
     train()
-    

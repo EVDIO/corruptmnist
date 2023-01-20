@@ -1,40 +1,43 @@
 # -*- coding: utf-8 -*-
-import click
 import logging
+import os
 from pathlib import Path
-from dotenv import find_dotenv, load_dotenv
 
+import click
 import numpy as np
 import torch
-import os
-from torchvision import transforms
+from dotenv import find_dotenv, load_dotenv
 from torch.utils.data import Dataset
 
 
 class CorruptMnist(Dataset):
-    def __init__(self, train, input_filepath = None, output_filepath = None):
+    def __init__(self, train, input_filepath=None, output_filepath=None):
 
         if train:
             content = []
             for i in range(8):
-                content.append(np.load(os.path.join(input_filepath, 'train_{}.npz'.format(i)), allow_pickle=True))
-            data = torch.tensor(np.concatenate([c['images'] for c in content])).reshape(-1, 1, 28, 28)
+                content.append(np.load(os.path.join(input_filepath,
+                                                    'train_{}.npz'.format(i)), allow_pickle=True))
+            data = torch.tensor(np.concatenate([c['images'] for c in content]))
+            data = data.reshape(-1, 1, 28, 28)
             targets = torch.tensor(np.concatenate([c['labels'] for c in content]))
         else:
-            content = np.load(os.path.join(input_filepath, 'test.npz'), allow_pickle=True)
-            data = torch.tensor(content['images']).reshape(-1, 1, 28, 28)
+            content = np.load(os.path.join(input_filepath, 'test.npz'),
+                              allow_pickle=True)
+            data = torch.tensor(content['images'])
+            data = data.reshape(-1, 1, 28, 28)
             targets = torch.tensor(content['labels'])
-            
+
         self.data = data
         self.targets = targets
-    
+
     def __len__(self):
         return self.targets.numel()
-    
+
     def __getitem__(self, idx):
 
         return self.data[idx].float(), self.targets[idx]
-        
+
 
 @click.command()
 @click.argument('input_filepath', type=click.Path(exists=True))
@@ -46,12 +49,13 @@ def main(input_filepath, output_filepath):
 
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
-    train_data = CorruptMnist(True,input_filepath=input_filepath,output_filepath=output_filepath)
-    test_data = CorruptMnist(False,input_filepath=input_filepath,output_filepath=output_filepath)
+    train_data = CorruptMnist(True, input_filepath=input_filepath,
+                              output_filepath=output_filepath)
+    test_data = CorruptMnist(False, input_filepath=input_filepath,
+                             output_filepath=output_filepath)
     print(type(train_data))
     torch.save(train_data, output_filepath + "/train_set.pt")
     torch.save(test_data, output_filepath + "/test_set.pt")
-
 
 
 if __name__ == '__main__':
@@ -66,5 +70,3 @@ if __name__ == '__main__':
     load_dotenv(find_dotenv())
 
     main()
-
-

@@ -1,0 +1,5 @@
+train_set_path: "data/processed/train_set.pt"
+model_path: "models/trained_model.pt"
+batch_size: 128
+n_epoch: 5
+lr: 0.0001

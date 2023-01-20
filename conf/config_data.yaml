@@ -1,0 +1,3 @@
+N_train: 25000
+N_test: 5000
+ndim: 4
